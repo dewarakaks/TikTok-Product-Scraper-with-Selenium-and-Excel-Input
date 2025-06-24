@@ -38,11 +38,12 @@ https://...tiktok-product...	SKU5678
 
 The columns URL and ARTICLE must be present in each sheet.
 
-### 3. **Run the Script**b
+### 3. **Run the Script**
 
 python tiktok_scraper.py
 
 A file dialog will appear—select your Excel file. The script will then process each URL and extract the relevant data.
+
 
 📝 Output
 The script will generate a file named like:
