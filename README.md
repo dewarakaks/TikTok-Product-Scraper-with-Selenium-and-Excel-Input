@@ -1,5 +1,5 @@
 # TikTok-Product-Scraper-with-Selenium-and-Excel-Input
-Python script to scrape product info (title, price, units sold) from TikTok Shop using Selenium. Reads URLs from Excel and saves results to a new Excel file. Useful for competitor tracking and market research.
+Automate TikTok Shop scraping with Python & Selenium. Extract product title, price, and sales from URLs in Excel, then export to Excel. Perfect for product research, competitor monitoring, and e-commerce data automation.
 
 This Python script automates the process of scraping product details from TikTok Shop. It reads product URLs from an Excel file and extracts the following information:
 
