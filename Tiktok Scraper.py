@@ -21,7 +21,7 @@ def setup_driver():
     )
     return webdriver.Chrome(options=options)
 
-# Read URLs from an Excel file
+# Read URLs from Excel
 def read_urls_from_excel(file_path):
     try:
         all_sheets = pd.read_excel(file_path, sheet_name=None)
@@ -35,23 +35,37 @@ def read_urls_from_excel(file_path):
                             'Article': row['ARTICLE']
                         })
             else:
-                print(f"Sheet '{sheet_name}' does not have 'URL' and 'ARTICLE' columns.")
+                print(f"Sheet '{sheet_name}' missing required columns.")
         if not urls:
-            print("No URL and Article data found in the Excel file.")
+            print("No valid data found in the Excel file.")
             exit()
         return urls
     except FileNotFoundError:
-        print("Error: Excel file not found. Make sure the file exists.")
+        print("Error: Excel file not found.")
         exit()
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"Excel read error: {e}")
         exit()
 
-# Scrape data for a given URL
+# Parse sold info
+def parse_sold_info(text):
+    if not text:
+        return None
+    text = text.upper().replace(',', '').strip()
+    match = re.search(r'([\d\.]+)(K?)', text)
+    if not match:
+        return None
+    number, suffix = match.groups()
+    number = float(number)
+    if suffix == 'K':
+        number *= 1000
+    return int(number)
+
+# Scrape data
 def scrape_data(driver, url_data):
     try:
         driver.get(url_data['URL'])
-        time.sleep(random.uniform(10, 15))  # Allow the page to load
+        time.sleep(random.uniform(10, 15))
 
         # Extract title
         try:
@@ -79,14 +93,14 @@ def scrape_data(driver, url_data):
             except Exception:
                 price_cleaned = None
 
-        # Extract sold info
+        # Extract and clean sold info
         try:
             sold_info = driver.find_element(By.CLASS_NAME, 'index-info__sold--Lgz8w').text
-            sold_cleaned = int(re.search(r'\d+', sold_info).group())
+            sold_cleaned = parse_sold_info(sold_info)
         except Exception:
             try:
                 sold_info = driver.find_element(By.CLASS_NAME, 'info__sold-ZdTfzQ').text
-                sold_cleaned = int(re.search(r'\d+', sold_info).group())
+                sold_cleaned = parse_sold_info(sold_info)
             except Exception:
                 sold_cleaned = None
 
@@ -96,14 +110,14 @@ def scrape_data(driver, url_data):
             'Title': title,
             'Price': price_cleaned,
             'Total Sold': sold_cleaned,
-            'Current Date': datetime.now()  # Date sebagai datetime object
+            'Current Date': datetime.now()
         }
 
     except Exception as e:
-        print(f"Error processing {url_data['URL']}: {e}")
+        print(f"Error scraping {url_data['URL']}: {e}")
         return None
 
-# Main execution
+# Main
 if __name__ == "__main__":
     try:
         print("Please select your Excel file containing the URLs...")
@@ -121,21 +135,21 @@ if __name__ == "__main__":
         driver = setup_driver()
 
         products = []
-        for url_data in urls:
+        for idx, url_data in enumerate(urls, start=1):
+            print(f"Scraping {idx}/{len(urls)}")
             data = scrape_data(driver, url_data)
             if data:
                 products.append(data)
 
         if products:
             output_file = f'tiktok_{datetime.now().strftime("%d %b %y")}.xlsx'
-            df = pd.DataFrame(products)
-            df.to_excel(output_file, index=False)
-            print(f"Data successfully saved to {output_file}")
+            pd.DataFrame(products).to_excel(output_file, index=False)
+            print(f"\nData saved to: {output_file}")
         else:
             print("No data was scraped.")
 
     except Exception as e:
-        print(f"An error occurred: {e}")
+        print(f"Unexpected error: {e}")
 
     finally:
         if 'driver' in locals():
